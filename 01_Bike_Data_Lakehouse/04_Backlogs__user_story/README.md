@@ -7,7 +7,7 @@
 
 <aside>
 
-**Goal**: Preparation steps before building the Lakehouse.
+**Goal**: Preparation steps before building the Lakehouse with **notion** or **jira**.
 
 </aside>
 
