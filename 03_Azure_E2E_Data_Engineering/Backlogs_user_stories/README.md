@@ -11,6 +11,12 @@
 
 </aside>
 
+- [ ]  **Environment setup**
+    - [ ]  **Setup Azure**
+        - [ ]  Use new email get 30 days free with $200 credit
+        - [ ]  Create Resource Group
+        - [ ]  Create ADF
+
 - [ ]  **Design the architecture**
     - [ ]  Read Databricks reference for the project → **LINK**
     - [ ]  Draw the data lakehouse architecture using draw.io or similar → **LINK**
