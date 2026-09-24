@@ -69,6 +69,7 @@
 **Managed_tables:** **Tables pour lesquelles lors de leur création on a pas utiliser une external location pointant sur un container specifique(bronze, silver, gold); 
 les fichiers et metadata sont managés par Databricks**;
 **L'external location auto créé lors de la création du metastore (metastore_root_location) doit etre configuré sur GRANT PRIVILEGES le email normal; il represente la managed_location**
+
 **External_tables:** **Tables pour lesquelles lors de leur création on a utiliser une external location pointant sur un container specifique(bronze, silver, gold);
 Les metadata sont dans databricks et les fichiers stockées en externe** 
 
