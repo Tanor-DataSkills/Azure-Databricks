@@ -45,9 +45,11 @@
               - [ ]  Choice managed identity & ajouter comme membre à ce rôle le Access connector qu'on avait créé
               - [ ]  Le Access connector dispose désormais un rôle de contributeur pour faire ce qu'on veut sur ADLS
          - [ ]  Créer un container nommé metastore dans ADLS
-         - [ ]  On retourne maintenant dans **Manage account** d'azure databricks pour créer le metastore de unity catalog
+         - [ ]  On retourne maintenant dans **Manage account** d'azure databricks pour **créer le metastore** de unity catalog
               - [ ]   Il faut toujours préciser le ADLS GEN2 Path lors de la création du métastore sinon on sera obligé de le renseigner à chaque fois qu'on créera un catalog  (**metastore@adls_account.dfs.core.windows.net/**)
-              - [ ]   Il faut aussi renseigner le access connector id  disponible dans Access connector
+              - [ ]   Il faut aussi renseigner le access connector id  disponible dans Access connector lors de la création du metastore
+              - [ ]   Assigner le ou les workspaces à ce metastore
+              - [ ]   Le compte email avec EXT est toujours ADMIN du metastore il faut le changer pour le rôle d'admin au compte email normal(créer un groupe admin et attribué le role d'dmin)
                   
 
 
