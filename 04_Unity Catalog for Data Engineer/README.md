@@ -81,7 +81,8 @@ At the current state, we have the raw data on Azure datalake in the bronze conta
 
 To create an external location, we should have “storage credentials”.
 
-Press enter or click to view image in full size
+<img width="2000" height="878" alt="image" src="https://github.com/user-attachments/assets/536ad686-779f-4682-8165-602da5112f33" />
+
 
 to create an External Location, you need to start by creating credentials. So, navigate to Databricks Workspace and click on Catalog > External Data > Credentials.
 
