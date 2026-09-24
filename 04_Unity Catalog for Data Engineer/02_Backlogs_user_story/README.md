@@ -45,11 +45,33 @@
               - [ ]  Choice managed identity & ajouter comme membre à ce rôle le Access connector qu'on avait créé
               - [ ]  Le Access connector dispose désormais un rôle de contributeur pour faire ce qu'on veut sur ADLS
          - [ ]  Créer un container nommé metastore dans ADLS
+         - [ ]  Créer des containers bronze, silver, gold dans ADLS
          - [ ]  On retourne maintenant dans **Manage account** d'azure databricks pour **créer le metastore** de unity catalog
               - [ ]   Il faut toujours préciser le ADLS GEN2 Path lors de la création du métastore sinon on sera obligé de le renseigner à chaque fois qu'on créera un catalog  (**metastore@adls_account.dfs.core.windows.net/**)
               - [ ]   Il faut aussi renseigner le access connector id  disponible dans Access connector lors de la création du metastore
               - [ ]   Assigner le ou les workspaces à ce metastore
               - [ ]   Le compte email avec EXT est toujours ADMIN du metastore il faut le changer pour le rôle d'admin au compte email normal(créer un groupe admin et attribué le role d'dmin)
+              - [ ]   GRANT ON metastore(Donner toutes les autorisation au compte admin) si ce n'est pas fait il y'aura erreur 
+       
+        - [ ]   Création de storage credential( de type azure managed identity) nommé **access_conn** et utiliser le **access connector ID**
+        - [ ]   Création les External locations(Créer une external location pour chaque container de adls):
+             - [ ]   **Bronze_external**
+             - [ ]   **Silver_external**
+             - [ ]   **Gold_external**
+             - [ ]   Tester chacune des connexions des external locations
+        - [ ]   Créer workspace (new project folder ou databricks unity catalog project) pour contenir les notebooks
+        - [ ]   Créer un notebook nommé metastore storage level(pour définir catalogs,schemas)
+        - [ ]   Attach notebook to cluster
+        - [ ]   Création du catalog( cars_catalog ou bien créer 3 catalogues(bronze, silver, gold ou architecture Dev, Test & Prod)
+        - [ ]   Création des schemas
+  **Lors de la création ds objets unity catalog(catalog, tables,...)si on ne précise pas sur le code external location on aura des managed catalog & tables c'est-à-dire que la table ou catalog créé sera enregistré directement par defaut dans le container metastore de adls qu'on avait renseigné lors de la création du metastore:Databricks gère à la la fois les metadata et les fichiers**
+
+**Managed_tables:** **Tables pour lesquelles lors de leur création on a pas utiliser une external location pointant sur un container specifique(bronze, silver, gold); 
+les fichiers et metadata sont managés par Databricks**;
+**L'external location auto créé lors de la création du metastore (metastore_root_location) doit etre configuré sur GRANT PRIVILEGES le email normal; il represente la managed_location**
+**External_tables:** **Tables pour lesquelles lors de leur création on a utiliser une external location pointant sur un container specifique(bronze, silver, gold);
+Les metadata sont dans databricks et les fichiers stockées en externe** 
+
                   
 
 
