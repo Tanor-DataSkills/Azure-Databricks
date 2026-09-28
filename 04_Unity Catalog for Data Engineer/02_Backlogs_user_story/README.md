@@ -66,12 +66,12 @@
         - [ ]   Création des schemas
   **Lors de la création ds objets unity catalog(catalog, tables,...)si on ne précise pas sur le code external location on aura des managed catalog & tables c'est-à-dire que la table ou catalog créé sera enregistré directement par defaut dans le container metastore de adls qu'on avait renseigné lors de la création du metastore:Databricks gère à la la fois les metadata et les fichiers**
 
-**Managed_tables:** **Tables pour lesquelles lors de leur création on a pas utiliser une external location pointant sur un container specifique(bronze, silver, gold); 
-les fichiers et metadata sont managés par Databricks**;
+**Managed_tables:** **Tables pour lesquelles lors de leur création on a pas utiliser une external location pointant sur un container specifique(bronze, silver, gold); Databricks s'occupe de gestion des tables managées(optimisation et performance)
+les fichiers et metadata sont managés par Databricks: si on drop la managed table elle restera pendant 7jours dans ADLS et avec un undrop on peut la recréer**;
 **L'external location auto créé lors de la création du metastore (metastore_root_location) doit etre configuré sur GRANT PRIVILEGES le email normal; il represente la managed_location**
 
 **External_tables:** **Tables pour lesquelles lors de leur création on a utiliser une external location pointant sur un container specifique(bronze, silver, gold);
-Les metadata sont dans databricks et les fichiers stockées en externe** 
+Les metadata sont dans databricks(catalog, schema, nom de table et infos) et les fichiers stockées en externe** 
 
                   
 
@@ -79,16 +79,7 @@ Les metadata sont dans databricks et les fichiers stockées en externe**
       
         - [ ]  File system name just make it something relevant and meaningful
         - [ ]  Create Key Vault
-    - [ ]  **Setup SQL On-Prem**
-        - [ ]  Download sql server
-        - [ ]  download ssms(if no work, sql server config mgr and then run the service)
-        - [ ]  download adventureworks
-**move to C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\Backup**
-        - [ ]  restore db
-[[ config mgr if you shut down ]]
-        - [ ]  create login sql script to get username and password
-        - [ ]  execute in correct db (might need to load again)
-        - [ ]  give user permissions via role on LHS
+ 
         - [ ]  create key vault -> create secret username, password
 **(issue: The operation is not allowed by RBAC. If role assignments were recently changed, please wait several minutes for role assignments to become effective.
 solution:**
@@ -100,62 +91,7 @@ solution:**
 download in Microsoft store and make works email by creating 365 account (or something) 
 If you don’t have windows, y.ou could try vm but nightmare – just use powerbi in synapse.
 
-- [ ]   **Data Ingestion with  ADF (phase 1)**
-    - [ ]  Launch Data Factory
-    - [ ]  Install self host integration runtime to our machine (since we are running the sql server)
-        - [ ]  Go to manager -> integration runtimes
-        - [ ]  One already exists to let cloud resources integrate
-        - [ ]  New -> azure -> self hosted -> create
-        - [ ]  Manual downloads an app with key used later to run, instead do express
-(if it fails do manual…)
-        - [ ]  Open integration runtime config mgr to confirm
-    - [ ]  Step 1 – connect to on prem db and copy using data factory
-        - [ ]  Create new pipeline in author
-        - [ ]  New copy data activity
-        - [ ]  Create new source dataset -> sql -> linked service (needed to connect to any data source) 
-        - [ ]  Linkedservice: name, runtime, server name and db name (from ssms), 
-sql auth (password from kv – linkedservice, test connection)
-        - [ ]  **fails cos of authentication to read**
-        - [ ]  go to kv -> iam  -> role assignment -> key vault secret user -> member (used manage services) 
-            - [ ]  go back and select password, test connection, then create
-won’t work cos you need to right click on your server in ssms and properties and security and change server authentication to SQL
-        - [ ]  restart server in config mgr then go back test connection and create (oh make sure encrypt is optional!! Or get https cert error)
-        - [ ]  then create new sink dataset, new linkedservice, your storage account may get error cos of soft delete – so go to storage account -> data protection -> uncheck enable soft delete for blobs
-        - [ ]  **if this doesn’t work you can check by previewing and then run the following**
 
-        - [ ]  USE AdventureWorksLT2019;
-        - [ ]  GRANT SELECT ON SalesLT.Address TO mrk;
-        - [ ]  **If still doesn’t work (JreNotFound) it may be that you need java installed (via choco or brew ideally)**
-
-- [ ]  **Data Ingestion with ADF (phase 2)**
-    - [ ]  Delete the file, as now creating pipeline for all tables
-    - [ ]  Create new pipeline
-    - [ ]  Create new SQL script in SSMS that lists all tables under SalesLT schema
-**SELECT
-s.name AS SchemaName,
-t.name AS TableName
-FROM sys.tables t
-INNER JOIN sys.schemas s
-ON t.schema_id = s.schema_id
-WHERE s.name = 'SalesLT'**
-
-So on pipeline create lookup activity, settings make a new source dataset and don’t select a specific table and use query option and copy the script (and uncheck first row only)
-    - [ ]  Run debug and look at inputs outputs on output – see its in json
-    - [ ]  Create forecah activity and connect on success
-    - [ ]  On settings click items -> dynamic -> activity outputs for look for all tables -> add .values (which is the json list output)
-    - [ ]  Update activities -> click pencil -> in foreach place copydata -> use SqlDBTables but select query and add dynamic content and insert:
-**@{concat('SELECT * FROM ', item().SchemaName, '.', item().TableName )} // remember the space after from!!**
-    - [ ]  Sink select the same parquet
-We want it in format bronze/Schema/Tablename/Tablename.parquet so we make a new Parquet sink and select parameters where we can leverage the item() we used for the source. Now go back to the sink and update value to dynamic content and put in the relevant item() – make sure to use @
-Now go back to parquet and under connection -> file path, update directory to @{concat( <<schema>>, ‘/’, <<table>>)}
-And for file concat the tablename and .parquet
-Validate and publish, go back to outer pipeline
-We can either debug or trigger, so lets add trigger to trigger now
-Click on link and can go monitor pipeline, each foreach is running concurrently as seen on gantt (if you need to make any changes, ensure you publish before triggering)
-NEED TO UPDATE SSMS QUERY FOR mrk PRIVILEGES:
-USE AdventureWorksLT2019;
-GRANT SELECT ON SCHEMA::SalesLT TO mrk;
-Since we made a change not in azure, we can click rerun pipeline in top left
 Now you can see the files and directories in storage account
 •	If you get an empty file:
 “Azure blob storage does not support having empty folders. Thus, when you try to create folders (or empty folders), there will be a duplicate empty file. 
