@@ -99,27 +99,108 @@ Après la création du notebook ayant servi à créer des requetes pour créer c
    - [ ] **Writing the transformed data to the silver storage container**
 
        - [ ]  <img width="1100" height="305" alt="image" src="https://github.com/user-attachments/assets/c58a673d-190c-47a8-868d-c2be01993b28" />
-- [ ]  On cheque dans ADSL pour voir si les fichiers transformées sont le silver container
+- [ ]  On check dans ADSL pour voir si les fichiers transformées sont le silver container
      - [ ]  <img width="1100" height="423" alt="image" src="https://github.com/user-attachments/assets/c7adea56-bc6d-44ab-a016-e40a061f8a18" />
      
 - [ ] On peut réqueter les fichiers
 SELECT * FROM 'abfss://<container>@<storageaccount>.dfs.core.windows.net/<path>/<file>'
       
-
-
-
+    - [ ]  <img width="1100" height="608" alt="image" src="https://github.com/user-attachments/assets/1e70cd95-253f-4943-bff4-bfe8b821d785" />
     
-             
+- [ ]  **Gold Layer( Dimensional model): Déplacement des données dans le Gold layer en faisant focus à un dimensional modeling et implementing SCD, lastrategie a besoinde capturer et de  stocker historical changes for analysis.**
+      Slowly Changing Dimension — Type 1
+In this part of the tutorial, we will dive into the steps to implement the incremental data update of the dim_model table to create the dimension in the gold layer.
+
+A detailed step-by-step guide is in this Databricks Notebook (PySpark)
+
+link: https://github.com/RihabFekii/azure-databricks-end-to-end-project/blob/main/databricks_notebooks/gold_dim_model.py
+   - [ ]  Modéliser les données à travers un modèle en étoile(star schema)
+L'une des fonctions les plus importantes est :
+
+# Incremental RUN 
+if spark.catalog.tableExists('cars_catalog.gold.dim_model'):
+    delta_table = DeltaTable.forPath(spark, "abfss://gold@datalakecarsale.dfs.core.windows.net/dim_model")
+    # update when the value exists
+    # insert when new value 
+    delta_table.alias("target").merge(df_final.alias("source"), "target.dim_model_key = source.dim_model_key")\
+        .whenMatchedUpdateAll()\
+        .whenNotMatchedInsertAll()\
+        .execute()
+
+# Initial RUN 
+else: # no table exists
+    df_final.write.format("delta")\
+        .mode("overwrite")\
+        .option("path", "abfss://gold@datalakecarsale.dfs.core.windows.net/dim_model")\
+        .saveAsTable("cars_catalog.gold.dim_model")
+    Le resultat ressemblera à ça:
+   - [ ]  <img width="2000" height="1209" alt="image" src="https://github.com/user-attachments/assets/f3c00804-0ca7-40e5-b53d-5ed8ce269fdb" />
+- [ ] Then to create the rest of the dimensions, you can simply clone the same notebook and just rename it with the new dimension name, and make the necessary changes, like the relative columns and table name.
+  - [ ]  <img width="1100" height="301" alt="image" src="https://github.com/user-attachments/assets/02d97cd0-a0fe-48fd-8b54-d20f9bf8189e" />
+- [ ] On répète le processus pour les autres dimensions qui sont dim_branch, dim_date and dim_dealer.
+     - [ ]  <img width="644" height="790" alt="image" src="https://github.com/user-attachments/assets/5b613452-5c68-4c2e-92d9-be07d51b63fe" />
+- [ ] **Création Fact_table(The Fact Table is created after the Dim tables are made)**
+
+df_fact = df_silver.join(df_branch, df_silver.Branch_ID==df_branch.Branch_ID, how='left') \
+    .join(df_dealer, df_silver.Dealer_ID==df_dealer.Dealer_ID, how='left') \
+    .join(df_model, df_silver.Model_ID==df_model.Model_ID, how='left') \
+    .join(df_date, df_silver.Date_ID==df_date.Date_ID, how='left')\
+    .select(df_silver.Revenue, df_silver.Units_Sold, df_branch.dim_branch_key, 
+    df_dealer.dim_dealer_key, df_model.dim_model_key, df_date.dim_date_key)
+
+- [ ] **Writing the the resultant fact sales table in the gold layer**
+
+if spark.catalog.tableExists('factsales'): 
+    deltatable = DeltaTable.forName(spark, 'cars_catalog.gold.factsales')
+
+    deltatable.alias('trg').merge(df_fact.alias('src'), 'trg.dim_branch_key = src.dim_branch_key and trg.dim_dealer_key = src.dim_dealer_key and trg.dim_model_key = src.dim_model_key and trg.dim_date_key = src.dim_date_key')\
+        .whenMatchedUpdateAll()\
+        .whenNotMatchedInsertAll()\
+        .execute()
+
+else: 
+    df_fact.write.format('delta')\
+            .mode('Overwrite')\
+            .option("path", "abfss://gold@datalakecarsale.dfs.core.windows.net/factsales")\
+            .saveAsTable('cars_catalog.gold.factsales')
+            
+- [ ] **Automatisation whole pipeline with databricks**
+     - [ ] To do that, navigate to Workflows on Databricks workspace and click on ‘create job’ and then fill in the needed info as shown below attach the silver_notebook and the cluster, and finally click on create task.
+     - [ ]  <img width="1100" height="778" alt="image" src="https://github.com/user-attachments/assets/bce4e163-65a3-4f5a-8e14-d54732753981" />
+     
+     Add more tasks in this manner:
+     - [ ]   <img width="1100" height="540" alt="image" src="https://github.com/user-attachments/assets/12dd20f1-1097-49f7-8724-871b995b3e7a" />
+     
+For the dimension model, make sure to configure a parameter of the incremental_flag at the stage of creating the task, as shown below:
+   - [ ]   <img width="1100" height="684" alt="image" src="https://github.com/user-attachments/assets/663c2727-b9ca-4d3e-bbd7-c1300431f0ca" />
+Après avoir ajouter les taches de dimension et fact table task, on obtient une sequential pipeline comme le suivant:
+     
+   - [ ]   <img width="1894" height="740" alt="image" src="https://github.com/user-attachments/assets/c06d7239-a79f-4783-ac9f-8e182dd05e8c" />
+
+Pour augmenter la performance, on a besoin de faire dépendre les DIM_tables tasks au silver table et faire dépendre fact_table à toutes les tables de dimension by modifiant les options de dépendance dans la form form.
+
+   - [ ]   <img width="1100" height="689" alt="image" src="https://github.com/user-attachments/assets/e16b3a9f-505e-4f15-a4ca-53ded3a4e755" />
+
+- [ ]  **‘Run now’ the pipeline**
+Some steps of the pipeline could throw an error, in that case, click on the task highlight the error fix it in the Notebooks in the workspace, and re-run the workflow until it all succeeds.
+
+   - [ ]  <img width="2000" height="927" alt="image" src="https://github.com/user-attachments/assets/61228714-70df-4c1d-a852-2bdbeb87dca9" />
+
+- [ ]  **Data Analyst can now use this data to make SQL queries via the SQL Editor**
+      
+     - [ ]  <img width="2000" height="860" alt="image" src="https://github.com/user-attachments/assets/e9b27e11-fceb-43b6-9389-dd9f1ef5da5d" />
+     
+- [ ]  **Make sure to turn off the compute once you are done with it.**
+      
+     - [ ]   <img width="2000" height="451" alt="image" src="https://github.com/user-attachments/assets/15c70d28-b55e-45f2-a68c-66bd99c72e83" />
+
+To test the functioning of the whole pipeline, navigate to the data factory, choose the incremental pipeline, run it again, and verify the count of the rows to verify the results (via the query editor in databricks)
+
+At this stage we finished the whole end to end pipeline using Azure and Databricks.
+
 - [ ]  **Setup PowerBI**
 download in Microsoft store and make works email by creating 365 account (or something) 
 If you don’t have windows, y.ou could try vm but nightmare – just use powerbi in synapse.
-
-
-Now you can see the files and directories in storage account
-•	If you get an empty file:
-“Azure blob storage does not support having empty folders. Thus, when you try to create folders (or empty folders), there will be a duplicate empty file. 
-•	It is a blob storage with hierrachial namespace disabled-is that the cause? Yes, enabling hierarchical workspace will enable azure data lake which supports file and directory semantics and therefore which wouldn't create that additional file.”
-•	E.g. https://stackoverflow.com/questions/76074718/additional-empty-blob-created-with-folder-names-in-azure-storage-container-not-a 
 
 - [ ]  **Design the architecture**
     - [ ]  Read Databricks reference for the project → **LINK**
