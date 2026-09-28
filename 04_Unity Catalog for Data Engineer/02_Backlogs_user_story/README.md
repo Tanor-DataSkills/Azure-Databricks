@@ -133,3 +133,4 @@ Now you can see the files and directories in storage account
 <aside>
 
 **Result:** Project is ready to start building Bronze, Silver, and Gold layers.
+
