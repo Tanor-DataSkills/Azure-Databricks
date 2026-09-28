@@ -214,3 +214,4 @@ At this stage we finished the whole end to end pipeline using Azure and Databric
 
 **Result:** Project is ready to start building Bronze, Silver, and Gold layers.
 
+Source : https://rihab-feki.medium.com/azure-end-to-end-data-engineering-project-medallion-architecture-with-databricks-part-2-9abf1ab3dba0
