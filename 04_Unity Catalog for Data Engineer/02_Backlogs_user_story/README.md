@@ -103,9 +103,9 @@ Après la création du notebook ayant servi à créer des requetes pour créer c
      - [ ]  <img width="1100" height="423" alt="image" src="https://github.com/user-attachments/assets/c7adea56-bc6d-44ab-a016-e40a061f8a18" />
      
 - [ ] On peut réqueter les fichiers
-
+SELECT * FROM 'abfss://<container>@<storageaccount>.dfs.core.windows.net/<path>/<file>'
       
-<SELECT * FROM 'abfss://<container>@<storageaccount>.dfs.core.windows.net/<path>/<file>'>
+
 
 
     
