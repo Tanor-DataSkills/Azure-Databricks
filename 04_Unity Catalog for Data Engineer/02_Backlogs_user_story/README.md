@@ -54,16 +54,22 @@
               - [ ]   GRANT ON metastore(Donner toutes les autorisation au compte admin) si ce n'est pas fait il y'aura erreur 
        
         - [ ]   Création de storage credential( de type azure managed identity) nommé **access_conn** et utiliser le **access connector ID**
-        - [ ]   Création les External locations(Créer une external location pour chaque container de adls):
+        - [ ]   Création les External locations(Créer une external location pour chaque container de adls):Il faut s'assurer que les données brutes sont déja disponible dans le bronze container!
              - [ ]   **Bronze_external**
              - [ ]   **Silver_external**
              - [ ]   **Gold_external**
              - [ ]   Tester chacune des connexions des external locations
+                   
+                - [ ]   <img width="1100" height="466" alt="image" src="https://github.com/user-attachments/assets/0c043f22-bc4c-4f9e-892f-e5b02d548926" />
+
         - [ ]   Créer workspace (new project folder ou databricks unity catalog project) pour contenir les notebooks
-        - [ ]   Créer un notebook nommé metastore storage level(pour définir catalogs,schemas)
+        - [ ]   Créer un notebook nommé config level(pour définir catalogs,schemas)
         - [ ]   Attach notebook to cluster
         - [ ]   Création du catalog( cars_catalog ou bien créer 3 catalogues(bronze, silver, gold ou architecture Dev, Test & Prod)
         - [ ]   Création des schemas
+              
+             -  [ ]    <img width="1398" height="804" alt="image" src="https://github.com/user-attachments/assets/17314a6b-6160-45fa-bd19-b244d0e26405" />
+
   **Lors de la création ds objets unity catalog(catalog, tables,...)si on ne précise pas sur le code external location on aura des managed catalog & tables c'est-à-dire que la table ou catalog créé sera enregistré directement par defaut dans le container metastore de adls qu'on avait renseigné lors de la création du metastore:Databricks gère à la la fois les metadata et les fichiers**
 
 **Managed_tables:** **Tables pour lesquelles lors de leur création on a pas utiliser une external location pointant sur un container specifique(bronze, silver, gold); Databricks s'occupe de gestion des tables managées(optimisation et performance)
@@ -72,22 +78,39 @@ les fichiers et metadata sont managés par Databricks: si on drop la managed tab
 
 **External_tables:** **Tables pour lesquelles lors de leur création on a utiliser une external location pointant sur un container specifique(bronze, silver, gold);
 Les metadata sont dans databricks(catalog, schema, nom de table et infos) et les fichiers stockées en externe** 
+  
+Après la création du notebook ayant servi à créer des requetes pour créer catalog & schemas on crée une deuxième notebook pour lecture et transformation des données
+   - [ ] Création du notebook silver(ou Bronze_to_silver)
+   - [ ] **Reading Data in df**
+         
+        - [ ]    <img width="2000" height="1001" alt="image" src="https://github.com/user-attachments/assets/581566c7-7e53-4671-9f54-7e9024c76654" />
+   - [ ] **Appliquer des transformations de données**
+         
+       - [ ]   <img width="1378" height="792" alt="image" src="https://github.com/user-attachments/assets/780ff6b8-2b45-419b-96df-d1668fa37b5d" />
+   - [ ] Then we created an additional column to calculate the revenue per unit this can be useful for the analytics.
+         
+        - [ ]    <img width="1100" height="601" alt="image" src="https://github.com/user-attachments/assets/4dbcc1ea-ad44-4349-8b4d-583be15f9971" />
+   - [ ] **Aggregations**
+         
+        - [ ]   <img width="1100" height="650" alt="image" src="https://github.com/user-attachments/assets/ab3d3045-d8a6-4b78-8100- d132a28aed19" />
+   - [ ] On peut créer un visuel sur Databricks avec le bouton (+) à coté de la table
+         
+       - [ ]    <img width="939" height="743" alt="image" src="https://github.com/user-attachments/assets/e8670554-b21c-4b28-a49d-6d20ca99782e" />
+   - [ ] **Writing the transformed data to the silver storage container**
 
-                  
-
+       - [ ]  <img width="1100" height="305" alt="image" src="https://github.com/user-attachments/assets/c58a673d-190c-47a8-868d-c2be01993b28" />
+- [ ]  On cheque dans ADSL pour voir si les fichiers transformées sont le silver container
+     - [ ]  <img width="1100" height="423" alt="image" src="https://github.com/user-attachments/assets/c7adea56-bc6d-44ab-a016-e40a061f8a18" />
+     
+- [ ] On peut réqueter les fichiers
 
       
-        - [ ]  File system name just make it something relevant and meaningful
-        - [ ]  Create Key Vault
- 
-        - [ ]  create key vault -> create secret username, password
-**(issue: The operation is not allowed by RBAC. If role assignments were recently changed, please wait several minutes for role assignments to become effective.
-solution:**
-            - [ ]  step1: select the Resource group where creating Azure Key Vault -> select "Access Control(IAM) ->Add "Add role assignment" and for Role search for "Key Vault Administrator" -> select the member by searching name or email.
-            - [ ]  step2: back to same Resource group -> "Access Control(IAM).
-            - [ ]  step3: select "view my access" you will find role created.
-            - [ ]  step4: try creating Azure secret done.
-        - [ ]  **Setup PowerBI**
+<SELECT * FROM 'abfss://<container>@<storageaccount>.dfs.core.windows.net/<path>/<file>'>
+
+
+    
+             
+- [ ]  **Setup PowerBI**
 download in Microsoft store and make works email by creating 365 account (or something) 
 If you don’t have windows, y.ou could try vm but nightmare – just use powerbi in synapse.
 
