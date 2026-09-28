@@ -54,13 +54,23 @@
               - [ ]   GRANT ON metastore(Donner toutes les autorisation au compte admin) si ce n'est pas fait il y'aura erreur 
        
         - [ ]   Création de storage credential( de type azure managed identity) nommé **access_conn** et utiliser le **access connector ID**
-        - [ ]   Création les External locations(Créer une external location pour chaque container de adls):Il faut s'assurer que les données brutes sont déja disponible dans le bronze container!
-             - [ ]   **Bronze_external**
-             - [ ]   **Silver_external**
-             - [ ]   **Gold_external**
-             - [ ]   Tester chacune des connexions des external locations
+              
+  - [ ]  **Setup PowerBI**
+download in Microsoft store and make works email by creating 365 account (or something) 
+If you don’t have windows, y.ou could try vm but nightmare – just use powerbi in synapse.
+
+- [ ]  **Design the architecture**
+    - [ ]  Read Databricks reference for the project → **LINK**
+    - [ ]  Draw the data lakehouse architecture using draw.io or similar → **LINK**
+- [ ]  **Create GitHub repository** → **LINK**
+- [ ]  **Connect GitHub to Databricks using URL (**Workspace → Create → Git Folder)
+   - [ ]   Création les External locations(Créer une external location pour chaque container de adls):Il faut s'assurer que les données brutes sont déja disponible dans le bronze container!
+   - [ ]   **Bronze_external**
+   - [ ] **Silver_external**
+   - [ ]  **Gold_external**
+   - [ ]  Tester chacune des connexions des external locations
                    
-                - [ ]   <img width="1100" height="466" alt="image" src="https://github.com/user-attachments/assets/0c043f22-bc4c-4f9e-892f-e5b02d548926" />
+       -  [ ]  <img width="1100" height="466" alt="image" src="https://github.com/user-attachments/assets/0c043f22-bc4c-4f9e-892f-e5b02d548926" />
 
         - [ ]   Créer workspace (new project folder ou databricks unity catalog project) pour contenir les notebooks
         - [ ]   Créer un notebook nommé config level(pour définir catalogs,schemas)
@@ -198,18 +208,7 @@ To test the functioning of the whole pipeline, navigate to the data factory, cho
 
 At this stage we finished the whole end to end pipeline using Azure and Databricks.
 
-- [ ]  **Setup PowerBI**
-download in Microsoft store and make works email by creating 365 account (or something) 
-If you don’t have windows, y.ou could try vm but nightmare – just use powerbi in synapse.
 
-- [ ]  **Design the architecture**
-    - [ ]  Read Databricks reference for the project → **LINK**
-    - [ ]  Draw the data lakehouse architecture using draw.io or similar → **LINK**
-- [ ]  **Create GitHub repository** → **LINK**
-- [ ]  **Connect GitHub to Databricks using URL (**Workspace → Create → Git Folder)
-- [ ]  **Create Lakehouse schemas (Unity Catalog) using**UI or SQL**:** `bronze` `silver` `gold`
-- [ ]  **Create a volume inside bronze schema** `raw_sources`
-- [ ]  Upload the 6 CSV files from engineering folder into the Bronze volume → **LINK**
 
 <aside>
 
