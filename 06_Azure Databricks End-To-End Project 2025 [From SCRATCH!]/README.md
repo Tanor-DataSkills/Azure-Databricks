@@ -1,1 +1,2 @@
 
+Dans ce projet, on travaillera sur un projet d’ingénierie des données (Data Engineering) de bout en bout, en utilisant des outils puissants tels qu’Azure Databricks, Delta Live Tables, Spark Streaming et PySpark. Nous explorerons des cas d’usage concrets, comme la modélisation dimensionnelle des données et la gestion des dimensions à évolution lente (Slowly Changing Dimensions) au sein de Databricks. De plus, nous avons inclus des questions fréquemment posées lors des entretiens pour vous aider à vous préparer à votre prochain poste en ingénierie des données.
