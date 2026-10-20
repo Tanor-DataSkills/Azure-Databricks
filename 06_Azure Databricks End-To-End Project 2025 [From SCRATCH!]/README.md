@@ -119,17 +119,32 @@ Une modélisation en étoile sera conçue.Onutilisera des **delta live tables** 
             - [ ]   Le compte email avec EXT est toujours ADMIN du metastore il faut le changer pour le rôle d'admin au compte email normal(créer un groupe admin et attribué le role d'dmin)
             - [ ]   GRANT ON metastore(Donner toutes les autorisation au compte admin) si ce n'est pas fait il y'aura erreur
                   
-        - [ ]   Create Catalog `Cata_databricks`; dans les grands projets on créera des catalogs tels que (bronze, silver, gold ou architecture Dev, Test & Prod)
-            - [ ]   Pas besoin de préciser le storage location pour le catalog car c'est déja précisé pour le metastore
+        - [ ]   Create Catalog `Cata_databricks`; dans les grands projets on créera des catalogs tels que ( architecture Dev, Test & Prod)
+            - [ ]   Pas besoin de préciser le storage location pour le catalog et les schemcas c'est déja précisé pour le metastore
             - [ ]   Pas besoin de configurer les accès catalog GRANT car on est déja admin au metastore
+            - [ ]   Create schemas ( en medaillon architecture les schémas sont nommés `bronze`, `silver` & `gold`) 
              
         - [ ] **Setup External locations pour chaque container**       
-            - [ ]  Création des External locations(Créer une external location pour chaque container de adls):Il faut s'assurer que les données brutes sont déja disponible dans le bronze container et que les storage credentials sont déja créés!
-            - [ ]  Création de storage credential( de type azure managed identity) nommé **tanor_creds** et utiliser le **access connector ID**
-            - [ ]  Création des external locations: `sources_ext_location`, `bronze_ext_location`, `silver_ext_location`, `gold_ext_location`
+            - [ ]  Création des External locations(Créer une external location pour chaque container de adls):Il faut s'assurer que les données brutes sont déja disponibles dans le bronze container et que les storage credentials sont déja créés!
+            - [ ]  Création de storage credential( de type azure managed identity) nommé **`tanor_creds`** et utiliser le **access connector ID**
+            - [ ]  Création des external locations: `source_ext_location`, `bronze_ext_location`, `silver_ext_location`, `gold_ext_location` en utilisant les paths des containers **`abfss://bronze@SA_Databricks_ETE.dfs.core.windows.net`** et le **`tanor_creds`** 
             - [ ]  Tester chacune des connexions des external locations
 
-> [!NOTE]
+           <img width="1105" height="355" alt="image" src="https://github.com/user-attachments/assets/74e38ff9-18fe-422d-ad13-6dccd629e494" />
+
+> [!IMPORTANT]
+> **Rappel**
+> > 
+> Avant de créer Databricks il faut toujours configurer les containers ***sources, bronze, silver et gold*** dans Adls.
+> 
+> `managed resource group name` de Databricks gère le cluster , les machines virtuelles. Si on utilise Unity Catalog on a pas besoin de définir le `managed resource group name` pour le Databricks.
+> 
+> L'accès à ADLS par d'autres ressources  pour lire et interagir avec les données(Databricks, ADF, Synapse) est régie par une autorisation.ADLS doit permettre aux autres ressouces de l'exploiter.
+> 
+> Au cas où les ressources devant interagir avec le ADLS sont des ressources d'Azure tels que ***ADF, Synapse*** ont peut directement donner l'accès pour utiliser le ADLS. ***Databricks*** n'est pas un outil d'Azure il faut donc créer un ***connector*** qui jouera le rôle de clé d'accès à ADLS
+> 
+>  La création du `Metastore` depuis **Manage account** doit etre toujours précédé par la configuration du `connector(access connector)`
+> 
 > **Rappel sur les external locations**
 > 
 >  Dans un projet en entreprise `external locations` sont très importants car on doit stocker, lire les données depuis un stockage externe(datalake externe:Adls ou S3).
@@ -147,35 +162,6 @@ les fichiers et metadata sont managés par Databricks: si on drop la managed tab
 Les metadata sont dans databricks(catalog, schema, nom de table et infos) et les fichiers stockées en externe
 
 
-  - [ ]  **Setup Salesforce**
-  - [ ]  
-          
-        - [ ]  Use salesforce trial account (30 days free trial)
-        - [ ]  Conserver le username reçu par mail and reset the password
-        - [ ]  Créons les tables sources **Account** & **Opportunity** en important dans salesforce Accounts et Opportunités(fichiers client & Opportunités) les fichiers ***03_salesforce_accounts_history.csv*** et ***04_salesforce_opportunities_history*** disponible dans le dossier ***00_Source_Data*** de ce repos.
-                  
-    - [ ]  **Setup Azure blob storage as volume**
-          
-  Azure blob storage, S3, gcp sont des stockages cloude qui peuvent stocker n'importe quel type de données(structured, semi structured, not structured).Nous pouvons créer un volume dans Databricks qui aura les memes caractéristiques de stockage que les clouds.
-     - [ ]  Créer un nouveau schéma(***Volumes*** et y créer un volume ***blob_source*** dans le catalog ***retail_q***
-     - [ ]  On a 2 choix de types de volume(external et managed); on choisit managed pour un volume entierement managé par Unity catalog. On aurait choisi external si on avait un adsl ou s3.
-     - [ ]  Créer un répertoire dans volume nommé ***transactions_source** pour y stocker les fichiers source transactions (***05_blob_transactions_history.csv***) disponibles dans le dossier ***00_Source_Data*** de ce repos)
-     - [ ]  On importe le fichier ***05_blob_transactions_history.csv*** dans le volume
-     - [ ]  Copier le ***path:*** "/Volumes/nom catalog/nom schema/nom volume/nom répertoire correspondant dans notre cas à ***"/Volumes/retail_q/Volumes/blob_source/transactions_source"*** (qui sera ultérieurement utilisé)
-     - [ ]  ***blob_source*** etant disponible dans un volume nous devons l'ingérer dans un nouveau schéma ***blob_bronze** du catalog ***retail_q***.
-
-> [!NOTE]
-> 
-> Avant de créer Databricks il faut toujours configurer les containers ***sources, bronze, silver et gold*** dans Adls.
-> 
-> `managed resource group name` de Databricks gère le cluster , les machines virtuelles. Si on utilise Unity Catalog on a pas besoin de définir le `managed resource group name` pour le Databricks.
-> 
-> L'accès à ADLS par d'autres ressources  pour lire et interagir avec les données(Databricks, ADF, Synapse) est régie par une autorisation.ADLS doit permettre aux autres ressouces de l'exploiter.
-> 
-> Au cas où les ressources devant interagir avec le ADLS sont des ressources d'Azure tels que ***ADF, Synapse*** ont peut directement donner l'accès pour utiliser le ADLS. ***Databricks*** n'est pas un outil d'Azure il faut donc créer un ***connector*** qui jouera le rôle de clé d'accès à ADLS
-> dd
->  La création du `Metastore` depuis **Manage account** doit etre toujours précédé par la configuration du `connector(access connector)`
-
 **Result:** Project is ready to start building Bronze, Silver, and Gold layers.
 
 </aside>
@@ -186,84 +172,34 @@ Les metadata sont dans databricks(catalog, schema, nom de table et infos) et les
 
 <aside>
 
-**Goal**: Build the Bronze layers by ingesting all raw CSV files into Delta tables without any kind of transformations. Nous avons un catalog (***retail_q***) dans lequel des schemas bronze sont dédiés à chacune de nos sources:  ***postgres_bronze, salesforce_bronze, blob_bronze*** pour y stocker nos données sources à l'etat brut.
+**Goal**: Build the Bronze layers by ingesting all raw parquet files into Delta tables without any kind of transformations. Nous avons un catalog `Cata_databricks` dans lequel un schéma `bronze` est pret à accueillir nos données sources à l'etat brut.Il s'agira de ***créer dans le schema bronze de Unity Catalog des delta tables from Azure Data lake storage gen 2***.
 
 </aside>
 
-- [ ]   **Data Ingestion pipeline from Postgres with Lakeflow connect(phase 1)**
+- [ ]   **Data Ingestion in Databricks with Lakeflow connect(phase 1)**
     - [ ]  Launch Databricks workspace
-    - [ ]  Create catalog ***retail_q*** et schémas ***postgres_bronze*** for source coming from postgresSQL
     - [ ]  Go to Jobs & Pipelines -> Ingestion pipeline(correspondant au **Lakeflow connect** dans le repos)
           
-    - [ ]  **Step 1/5 : Connexion**
+    - [ ]  **Step 1/2 : Connexion**
           
-        - [ ]  Parmi toutes les sources disponibles on clique sur postgreSQL
-        - [ ]  Create connexion between Postgres & Databricks(*connex_name = neon_postgres_project*), pour avoir user, passeword et le port on utilise chat gpt en collant le lien qu'on avait récupéré(*based on this url give me the username, passeword and hostname*)
+        - [ ]  Parmi toutes les sources disponibles on clique sur `Files ---> ADLS`
+        - [ ]  Choisir le `source_ext_location` storage location donnant accès au container abritant les données brutes
               
-    - [ ]  **Step 2/5 : Ingestion setup**
+    - [ ]  **Step 2/2 : Choisir les Directories abritants les fichiers**
           
-        - [ ]  Donner un nom au pipeline(***postgres_to_bronze*** et sélectionne le catalog et schema cibles(créons les respectivement ***retail_q*** et ***postgres_bronze***)
-        - [ ]  Cliquez sur *create pipeline and continu*
-              
-    - [ ]  **Step 3/5 : Validating pipeline configuration**
-          
-        - [ ]  Spécifier la database, le schema et les 2 tables source à ingérer
-        - [ ]  Choisir ***batch ou incrementielle ingestion:***
-        - [ ]  Choisir dans ***cursor column*** la colonne ***updated_at*** pour définir la colonne ***incrémentielle*** de la table ***product_catalog***
-        - [ ]  Pour la table ***product_catalog*** mettre ***history tracking*** en **ON** pour rendre la table de destination une structure **SCD2** en créant 2 colonnes supplémentaires ***start_at(même valeur que update_at par défaut) & end_at(null par défaut)***.
-        - [ ]  Choisir dans ***cursor column*** la colonne ***last_stock_update_at*** pour définir la colonne ***incrémentielle*** de la table ***inventory***
-        - [ ]  Pour la table ***inventory*** mettre ***history tracking*** en **OFF** pour rendre la table de destination une structure **SCD1**
-              
-> [!NOTE]
-> *Le paramètre de type SCD détermine la façon dont la table de destination gère les modifications.*
-> 
-> **SCD 2:** *Si un enregistrement est mise à jour ou supprimé depuis la source; alors toute la ligne sera historisée avec une valeur **end_at not null**; une nouvelle ligne avec les nouvelles valeurs vont être créées avec **end_at null** et start_at prend la valeur de la dernière end_at.2 lignes vont être updté.On créera une colonne conditionnelle nommée active basée sur la end_at is null*.Cette approche suit la façon dont les données évoluent au fil du temps.
-> 
-> **SCD 1:** *Il n'ya pas d'historisation les enregistrements modifiées ou supprimées disparaissent directement; seules les lignes activent seront présente: c'est le cas pour la table inventory.Une ligne sera updatée par le pipeline*.
-
-  - [ ]  **Step 4/5 : Spécifier ou stocker les données ingérées dans Databricks**
-        
-     - [ ]  Choisir le catalog ***retail_q*** et le schémas ***postgres_bronze***
-           
-  - [ ]  **Step 5/5 : Schedules(run planification) & Notifications**
+        - [ ]  Sélectionner en 1er le directory `régions` car elle a des données statiques ne necessitants pas un chargement incrémentiel
+        - [ ]  Cliquez sur *preview table*
+        - [ ]  Choisir respectivement le catalog , le schema et le nom de la table delta de destination (`Cata_databricks`, `bronze` et regions)
+        - [ ]  Refresh et vérifier la table `region` dans `Cata_databricks.bronze` et depuis detail que la table est marquée `managed` ou `external`
+        - [ ]  Vérifier dans ADSL qu'une copie de la table delta est créée dans le container metastore si la table est `managed`
+               
+    - [ ]  **Step 3/3 : Schedules(run planification) & Notifications**
         
     - [ ]  Add a trigger to run the job on a schedule (for example daily)
     - [ ]  Pour l'instant nous supprimons le schedule de défaut qu'on configurera plus tard en fonction des besoins d'execution
     - [ ]  Les notifications ne sont configurées qu'avec **failure** afin de ce recevoir un email en cas d'echec de pipeline execution.
     - [ ]  On clique sur **Save & Run** pour terminer la création du **ingestion pipeline** nommé ***postgres_to_bronze*** qui ingère dans le catalogue ***retail_q*** et le schema ***postgres_bronze*** de Unity catalog de databricks les tables ***product_catalog*** et ***inventory***.
 
-- [ ]  **Data Ingestion pipeline from Salesforce with Lakeflow connect(phase 2)**
-    - [ ]  Create schémas ***salesforce_bronze*** for source coming from salesforce
-    - [ ]  Go to Jobs & Pipelines -> Ingestion pipeline(correspondant au *Lakeflow connect* dans le repos)
-          
-    - [ ]  **Step 1/5 : Connexion**
-          
-        - [ ]  Parmi toutes les sources disponibles on clique sur Salesforce
-        - [ ]  Create connexion between Salesforce & Databricks(*connex_name = Salesforce_retail_project*),
-        - [ ]  On utilise les username, passeword obtenus lors de la création du salesforce account
-              
-    - [ ]  **Step 2/5 : Ingestion setup**
-          
-        - [ ]  Donner un nom au pipeline (***salesforce_to_bronze***) et on sélectionne le catalog ***retail_q*** et on crée le schéma cibles ***salesforce_bronze***
-        - [ ]  Cliquez sur *create pipeline and continu
-              
-    - [ ]  **Step 3/5 : Validating pipeline configuration**
-          
-        - [ ]  Spécifier la database, le schema et les 2 tables source à ingérer
-        - [ ]  Cocher ***history tracking*** en **ON ou OFF**définit le choix entre  ***batch et incrementielle ingestion***
-        - [ ]  Pas besoin de préciser un ***cursor column*** sur Salesforce car c'est déja intégré la colonne pour définir la colonne ***incrémentielle*** de la table ***account***
-        - [ ]  Pour la table ***opportunity*** mettre ***history tracking*** en **OFF**.
-              
-   - [ ]  **Step 4/5 : Spécifier où stocker les données ingérées dans Databricks**
-         
-        - [ ]  Choisir le catalog ***retail_q*** et le schémas ***sales_bronze***
-              
-   - [ ]  **Step 5/5 : Schedules(run planification) & Notifications**
-         
-        - [ ]  Add a trigger to run the job on a schedule (for example daily)
-        - [ ]  Pour l'instant nous supprimons le schedule de défaut qu'on configurera plus tard en fonction des besoins d'execution
-        - [ ]  Les notifications ne sont configurées qu'avec **failure** afin de ce recevoir un email en cas d'echec de pipeline execution.
-        - [ ]  On clique sur **Save & Run** pour terminer la création du **ingestion pipeline** nommé ***salesforce_to_bronze*** qui ingère dans le catalogue ***retail_q*** et le schema ***salesforce_bronze*** de Unity catalog de databricks les tables ***account** et ***opportunity***.
 
 - [ ]  **Data Ingestion pipeline from Volume with Autoloader(phase 3)**
     - [ ]  Create a folder in the repository called ***01_Notebook*** to store all scripts inside it
