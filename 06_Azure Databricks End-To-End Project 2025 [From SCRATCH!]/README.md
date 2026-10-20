@@ -78,35 +78,77 @@ Une modélisation en étoile sera conçue.Onutilisera des **delta live tables** 
             - [ ]  Créer les containers sources, bronze, silver & gold
                 - [ ]  Dans sources container on crée des 4 Directories: `orders`, `customers`, `products`, `régions`
                 - [ ]  Charger dans les directories respectivement: `orders_first.parquet`, `orders_first.parquet`, `product_first.parquet` & `régions.parquet`
-            
+
+    - [ ]  **Setup Databricks**     
         - [ ]  Create Databricks workspace
             - [ ]  Workspace name : `Databricks_ETE`
             - [ ]  Pour Pricing tier en entreprise on choisi "Premium" et "Trial" en mode gratuit
             - [ ]  La configuration du Managed resource group est très important ici car elle définit les ressources de calcul à utiliser par Databricks(Disk, virtual network, Ram); il faut lui donné un nom explicite(man_databricks);On donne juste le nom mais les compute resources seront gérées par Databricks contrairement aux projets traditionnels ou azure fournissait les ressources de calcul(compute) pour Databricks
             - [ ]  On vérifie dans Resource group si le workspace Databricks est bien créé
             - [ ]  Lancer le Databricks workspace pour accéder au UI(Interface Utilisateur)
-                 
+            - [ ]  Créer dans Workspace un folder nommé `Databricks_ETE_Project`
+                  
+    - [ ] **Setup Databricks Unity Catalog**
+        - [ ]  Création de Unity Catalog metastore
+            - [ ]  On ne peut pas créer Un metastore directement dans l'onglet Catalog mais on passe par **Manage Account** donnant accès au `Databricks Admin Console` 
+            - [ ]  Cliquez sur le coin en haut à droite puis sur **Manage account** qui est un console pour gérer Databricks.
+            - [ ]  Ce console(**Manage account**) n'est disponible que pour les **ADMIN**
+            - [ ]  Par défaut l'email disponible dans Azure databricks workspace ne nous offre pas le `rôle admin`; l'admin est votre compte user disponible dans `Entra ID (active directory d'azure)` qu'il faut récupérer depuis `Azure Entra ID ---> Users --->` copiez l'identifiant EXT azure pour se connecter au databricks account(azure databricks console login) via le lien `https://accounts.azuredatabricks.net/login?tuuid=d35690e2-fe1b-40ab-a8d6-437611c15183`
+            - [ ]  Une fois reconnecter avec le l'identifiant EXT qui est `admin par défaut` on attribut à l'identifiant présent sur Databricks le role d'ADMIN
+            - [ ]  Aller dans User Management cliquer sur user referent à mon email normal(diffèrent du EXT) et lui conférer le role d'admin
+            - [ ]  On retourne dans Azure databricks workspace pour retrouver `Manage account`
+            - [ ]  Metastore doit être lié à ADLS pour lire ou écrire les données sur ADSL depuis le Matastore de Databricks
+            - [ ]  Avant de créer le metastore depuis **Manage account** on configure un connector(access connector)
+     
+    - [ ] **Setup Access connector for azure databricks**        
         - [ ]  Create Access connector for azure databricks depuis Azure: `Conn_Databricks_ETE`
         - [ ]  Permettre Access connector for azure databricks d'accéder à ADLS depuis IAM storage account
             - [ ]  Clique sur Storage account
+            - [ ]  Créer un container nommé `metastore`
+            - [ ]  Cliquez sur `Containers` pour faire afficher tous les containers
             - [ ]  Go to Access Control(IAM)
             - [ ]  Add role assignment & choose Storage blob data contributor
-            - [ ]  Choice managed identity & ajouter comme membre à ce rôle le Access connector qu'on avait créé
+            - [ ]  Choice managed identity & ajouter comme membre à ce rôle le Access connector `Conn_Databricks_ETE` qu'on avait créé
             - [ ]  Le Access connector dispose désormais un rôle de contributeur pour faire ce qu'on veut sur ADLS
-
-        - [ ]  Création de Unity Catalog metastore
-            - [ ]  On ne peut pas créer Unity Catalog metastore directement dans l'onglet Catalog mais on passe par **Account**
-            - [ ]  Cliquez sur le coin en haut à droite puis sur **Manage account** qui est un console pour gérer Databricks.
-            - [ ]  Ce console(**Manage account**) n'est disponible que pour les **ADMIN**
-            - [ ]  Par défaut l'email disponible dans Azure databricks workspace ne nous offre pas le `rôle admin`; l'admin est votre compte user disponible dans `Entra ID (active directory d'azure)` qu'il faut récupérer depuis Azure Entra ID ---> Users ---> copiez l'identifiant EXT azure pour se connecter au databricks account(azure databricks console login) via le lien `https://accounts.azuredatabricks.net/login?tuuid=d35690e2-fe1b-40ab-a8d6-437611c15183`
-             - [ ]  Une fois reconnecter avec le l'identifiant EXT qui est `admin par défaut` on attribut à l'identifiant présent sur Databricks le role d'ADMIN
-             - [ ]  Aller dans User Management cliquer sur user referent à mon email normal(diffèrent du EXT) et lui conférer le role d'admin
-             - [ ]  On retourne dans Azure databricks workspace pour retrouver `Manage account`
-             - [ ]  Metastore doit être lié à ADLS pour lire ou écrire les données sur ADSL depuis le Matastore de Databricks
-             - [ ]  avant de créer le metastore depuis **Manage account** on configure un connector(access connector)
+      
+    - [ ] **Metastore - Catalog & Schemas creation**       
+        - [ ]  On retourne maintenant dans `Manage account` d'azure databricks pour **créer le metastore** `Databricks_ETE_metastore`dans unity catalog
+            - [ ]   Il faut toujours préciser le ADLS GEN2 Path lors de la création du métastore sinon on sera obligé de le renseigner à chaque fois qu'on créera un catalog  (`metastore@SA_Databricks_ETE.dfs.core.windows.net/`)
+            - [ ]   Il faut aussi renseigner le access connector id  disponible dans Access connector lors de la création du metastore
+            - [ ]   Assigner le ou les workspaces Databricks à ce metastore
+            - [ ]   Le compte email avec EXT est toujours ADMIN du metastore il faut le changer pour le rôle d'admin au compte email normal(créer un groupe admin et attribué le role d'dmin)
+            - [ ]   GRANT ON metastore(Donner toutes les autorisation au compte admin) si ce n'est pas fait il y'aura erreur
+                  
+        - [ ]   Create Catalog `Cata_databricks`; dans les grands projets on créera des catalogs tels que (bronze, silver, gold ou architecture Dev, Test & Prod)
+            - [ ]   Pas besoin de préciser le storage location pour le catalog car c'est déja précisé pour le metastore
+            - [ ]   Pas besoin de configurer les accès catalog GRANT car on est déja admin au metastore
              
-             - [ ]  
-    - [ ]  **Setup Salesforce**
+        - [ ] **Setup External locations pour chaque container**       
+            - [ ]  Création des External locations(Créer une external location pour chaque container de adls):Il faut s'assurer que les données brutes sont déja disponible dans le bronze container et que les storage credentials sont déja créés!
+            - [ ]  Création de storage credential( de type azure managed identity) nommé **tanor_creds** et utiliser le **access connector ID**
+            - [ ]  Création des external locations: `sources_ext_location`, `bronze_ext_location`, `silver_ext_location`, `gold_ext_location`
+            - [ ]  Tester chacune des connexions des external locations
+
+> [!NOTE]
+> **Rappel sur les external locations**
+> 
+>  Dans un projet en entreprise `external locations` sont très importants car on doit stocker, lire les données depuis un stockage externe(datalake externe:Adls ou S3).
+> 
+> Vous pouvez vous dire mais on a déja le connector databricks qui donne accès pourquoi donc utiliser des external locations? La réponse est que external locations est beaucoup plus précis en donnant accès aux containers; il faut donc créer un external location pour chaque container.
+> 
+> Lors de la création ds objets unity catalog(catalog, tables,...)si on ne précise pas sur le code external location on aura des managed catalog & tables c'est-à-dire que la table ou catalog créé sera enregistré directement par defaut dans le container metastore de adls qu'on avait renseigné lors de la création du metastore:Databricks gère à la la fois les metadata et les fichiers.
+> 
+> `Managed_tables`:Tables pour lesquelles lors de leur création on a pas utiliser une external location pointant sur un container specifique(bronze, silver, gold); Databricks s'occupe de gestion des tables managées(optimisation et performance)
+les fichiers et metadata sont managés par Databricks: si on drop la managed table elle restera pendant 7jours dans ADLS et avec un undrop on peut la recréer.
+> 
+> **L'external location auto créé lors de la création du metastore (metastore_root_location) doit etre configuré sur GRANT PRIVILEGES le email normal; il represente la managed_location**
+> 
+>`External_tables`: Tables pour lesquelles lors de leur création on a utiliser une external location pointant sur un container specifique(bronze, silver, gold);
+Les metadata sont dans databricks(catalog, schema, nom de table et infos) et les fichiers stockées en externe
+
+
+  - [ ]  **Setup Salesforce**
+  - [ ]  
           
         - [ ]  Use salesforce trial account (30 days free trial)
         - [ ]  Conserver le username reçu par mail and reset the password
